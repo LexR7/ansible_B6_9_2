@@ -1,0 +1,41 @@
+---
+- hosts: test_servers
+  gather_facts: no
+  become: yes
+  vars_files:
+    - ./vars/external_vars.yml
+
+  tasks:
+  - name: create group
+    group:
+      name: superusers
+      state: present
+
+  - name: create user2
+    user:
+      name: user2
+      shell: /bin/bash
+      groups: superusers
+      password: "{{ user_password }}"
+      generate_ssh_key: yes
+      ssh_key_bits: 2048
+      ssh_key_file: .ssh/id_rsa
+      ssh_key_passphrase: "{{ sshkey_phrase }}"
+
+  - name: create user3
+    user:
+      name: user3
+      shell: /bin/bash
+      groups: superusers
+      password: "{{ user_password }}"
+      generate_ssh_key: yes
+      ssh_key_bits: 2048
+      ssh_key_file: .ssh/id_rsa
+      ssh_key_passphrase: "{{ sshkey_phrase }}"
+
+  - name: modify sudoers
+    lineinfile:
+      path: /etc/sudoers
+      regexp: "^%superusers"
+      line: "%superusers   ALL=(ALL:ALL) ALL"
+      validate: /usr/sbin/visudo -cf %s
